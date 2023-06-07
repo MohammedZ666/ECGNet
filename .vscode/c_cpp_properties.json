@@ -7,7 +7,7 @@
                 "/usr/lib/avr/include/**"
             ],
             "defines": [],
-            "compilerPath": "/usr/bin/clang"
+            "compilerPath": "/usr/bin/avr-g++"
         }
     ],
     "version": 4

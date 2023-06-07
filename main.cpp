@@ -1,6 +1,7 @@
 #define __AVR_ATmega328P__
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdlib.h>
 #include "model.h"
 #define BAUD_RATE 9600
 #define F_CPU 16000000UL
@@ -189,7 +190,41 @@ int detect_qrs()
     return -1;
 }
 
-int main()
+void led_blink()
+{
+    DDRB |= (1 << PB5);
+    if (index == 0)
+    {
+        while (1)
+        {
+            // Turn on the LED
+            PORTB |= (1 << PB5);
+
+            // Delay for 1 second
+            _delay_ms(1000);
+
+            // Turn off the LED
+            PORTB &= ~(1 << PB5);
+
+            // Delay for 1 second
+            _delay_ms(1000);
+        }
+    }
+}
+
+void send_float(float x)
+{
+    char myString[12];
+    dtostrf(x, 11, 8, myString);
+
+    int i = 0;
+    while (myString[i] != '\0')
+    {
+        uart_transmit(myString[i++]);
+        _delay_us(834);
+    }
+}
+int main(void)
 {
     initECGModule();
     float layer2in[SAMPLE_IN_LEN0 * LAYER0_KERNEL_DIM1]{0.0};
@@ -200,25 +235,10 @@ int main()
     dense(output, layer2in, LAYER1_KERNEL, LAYER1_BIAS, SAMPLE_IN_LEN0, LAYER0_KERNEL_DIM1, LAYER1_KERNEL_DIM0, LAYER1_KERNEL_DIM1);
     index = argmax(output, SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1);
 
-    DDRB |= (1 << PB5);
-    // if (index == 0)
-    // {
-    //     while (1)
-    //     {
-    //         // Turn on the LED
-    //         PORTB |= (1 << PB5);
-
-    //         // Delay for 1 second
-    //         _delay_ms(1000);
-
-    //         // Turn off the LED
-    //         PORTB &= ~(1 << PB5);
-
-    //         // Delay for 1 second
-    //         _delay_ms(1000);
-    //     }
-    // }
-
     uart_init();
-    uart_transmit('A');
+
+    for (uint8_t i = 0; i < SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1; i++)
+    {
+        send_float(output[i]);
+    }
 }
