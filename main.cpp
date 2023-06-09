@@ -9,7 +9,6 @@
 
 float res[150]{0.0};
 int index = -1;
-
 void uart_init()
 {
     // Set baud rate
@@ -236,7 +235,7 @@ int main(void)
     index = argmax(output, SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1);
 
     uart_init();
-
+    send_float((float)k);
     for (uint8_t i = 0; i < SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1; i++)
     {
         send_float(output[i]);
