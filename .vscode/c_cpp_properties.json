@@ -8,6 +8,15 @@
             ],
             "defines": [],
             "compilerPath": "/usr/bin/avr-g++"
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "D:\\avr-gnu-toolchain\\avr\\include"
+            ],
+            "defines": [],
+            "compilerPath": "D:\\avr-gnu-toolchain\\bin\\avr-g++"
         }
     ],
     "version": 4

@@ -7,8 +7,6 @@
 #define F_CPU 16000000UL
 #define UBRR_VALUE ((F_CPU / (16UL * BAUD_RATE)) - 1)
 
-float res[150]{0.0};
-int index = -1;
 void uart_init()
 {
     // Set baud rate
@@ -65,11 +63,11 @@ uint16_t analogRead()
     uint16_t analogValue = ADC;
     return analogValue;
 }
-int detect_qrs()
+int detect_qrs(float *x, float *res)
 {
     int len = 150;
-    float y[len];
-    float x_2 = 0.0;
+    float y[len]{0.0};
+    float x_2 = 0.0; // delayed x, y samples
     float x_1 = 0.0;
     float y_1 = 0.0;
     float y_2 = 0.0;
@@ -81,26 +79,14 @@ int detect_qrs()
     const float b1 = 0;
     const float b2 = -0.11216024;
 
-    for (int i = 0; i < len;)
+    for (int i = 0; i < len; ++i)
     {
+        y[i] = (b0 * x[i] + b1 * x_1 + b2 * x_2 - (a1 * y_1 + a2 * y_2)) / a0;
 
-        if (checkECGUnavailable())
-        {
-        }
-
-        else
-        {
-
-            // float x_i = (analogRead() / 511.5) - 1;
-            float x_i = SAMPLE_INPUT_F[i];
-            y[i] = (b0 * x_i + b1 * x_1 + b2 * x_2 - (a1 * y_1 + a2 * y_2)) / a0;
-            x_2 = x_1;
-            x_1 = x_i;
-            y_2 = y_1;
-            y_1 = y[i];
-            ++i;
-        }
-        _delay_us(120);
+        x_2 = x_1;
+        x_1 = x[i];
+        y_2 = y_1;
+        y_1 = y[i];
     }
 
     for (int i = 0; i < 5; i++)
@@ -115,8 +101,7 @@ int detect_qrs()
     len--;
 
     int integration_window{15};
-    //  int n = len + integration_window - 1;
-    int n = len;
+    int n = len + integration_window - 1;
     int max_len = len > integration_window ? len : integration_window;
     for (int i = 0; i < n; i++)
     {
@@ -131,7 +116,7 @@ int detect_qrs()
         }
     }
 
-    int spacing{50};
+    int spacing{30};
     float limit{0.35};
     float qrs_peak_est{0.0};
     float noise_peak_est{0.0};
@@ -140,74 +125,159 @@ int detect_qrs()
     float noise_filt{0.125};
     float qrs_noise_diff_weight{0.25};
     float last_qrs_index{-1};
-    int refractory_period{120};
     float threshold{0.0};
+    uint8_t refractory_period{120};
+    uint8_t i = 60;
+    uint8_t j = 1;
+    uint8_t max_ind = i;
+    bool is_peak = false;
 
-    for (int i = 0; i < n; i++)
+    while (j <= spacing && i < len - 30)
     {
-        int lookup = (i - 1) - spacing < 0 ? i : spacing;
-        bool is_broken = false;
-        for (int j = 1; j <= lookup; j++)
+        if (!(res[i] > res[i - j] && res[i] > res[i + j]))
         {
-            if (!(res[i] > res[i - j]))
-            {
-                is_broken = true;
-                break;
-            }
-        }
-        if (is_broken)
+            i = i + j;
+            j = 1;
             continue;
-
-        lookup = (i + 1) + spacing > n - 1 ? (n - 1) - i : spacing;
-        for (int j = 1; j <= lookup; j++)
-        {
-            if (!(res[i] > res[i + j]))
-            {
-                is_broken = true;
-                break;
-            }
         }
-        if (!is_broken && res[i] > limit)
+
+        else if (j == spacing)
         {
-            if (last_qrs_index == -1 || i - last_qrs_index > refractory_period)
+            is_peak = true;
+            max_ind = res[i] > res[max_ind] ? i : max_ind;
+            i += spacing + 1;
+        }
+        j++;
+    }
+    if (!is_peak)
+        return -1;
+
+    i = max_ind;
+    if (last_qrs_index == -1 || i - last_qrs_index > refractory_period)
+    {
+        float current_peak_val = res[i];
+        if (current_peak_val > threshold)
+        {
+            qrs_peak_est = qrs_filt * current_peak_val + (1 - qrs_filt) * qrs_peak_est;
+            last_qrs_index = i;
+            return i;
+        }
+        else
+        {
+            noise_peak_est = noise_filt * current_peak_val + (1 - noise_filt) * noise_peak_est;
+        }
+        threshold = noise_peak_est + qrs_noise_diff_weight * (qrs_peak_est - noise_peak_est);
+    }
+    return -1;
+}
+
+void softmax(float *x, int rows, int cols)
+{
+    float sum = 0;
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            x[i * cols + j] = expf(x[i * cols + j]);
+            sum += x[i * cols + j];
+        }
+    }
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            x[i * cols + j] = x[i * cols + j] / sum;
+        }
+    }
+}
+void relu(float *x, int rows, int cols)
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            x[i * cols + j] = x[i * cols + j] < 0.0f ? 0.0f : x[i * cols + j];
+        }
+    }
+}
+
+void sigmoid(float *x, int rows, int cols)
+{
+    for (int i = 0; i < rows; i++)
+    {
+        for (int j = 0; j < cols; j++)
+        {
+            x[i * cols + j] = 1 / (1 + expf(-1 * x[i * cols + j]));
+        }
+    }
+}
+
+void matmul(float *result, float *input, int8_t *kernel, uint8_t r1, uint8_t c1, uint8_t r2, uint8_t c2)
+{
+
+    for (int i = 0; i < r1; i++)
+    {
+        for (int j = 0; j < c2; j++)
+        {
+            for (int k = 0; k < c1; k++)
             {
-                float current_peak_val = res[i];
-                if (current_peak_val > threshold)
-                {
-                    last_qrs_index = i;
-                    return i;
-                    // qrs_peak_est = qrs_filt * current_peak_val + (1 - qrs_filt) * qrs_peak_est;
-                }
-                else
-                {
-                    noise_peak_est = noise_filt * current_peak_val + (1 - noise_filt) * noise_peak_est;
-                }
-                threshold = noise_peak_est + qrs_noise_diff_weight * (qrs_peak_est - noise_peak_est);
+                result[i * c1 + j] += input[i * c1 + k] * dequantize(kernel[k * c2 + j]);
             }
         }
     }
-    return -1;
+}
+
+void dense(float *output, float *input, int8_t *kernel, int8_t *bias, uint8_t ir, uint8_t ic, uint8_t kr, uint8_t kc, char gate)
+{
+    matmul(output, input, kernel, ir, ic, kr, kc);
+    for (int i = 0; i < ir; i++)
+    {
+        for (int j = 0; j < kc; j++)
+        {
+            output[i * kc + j] += dequantize(bias[i * kc + j]);
+        }
+    }
+
+    if (gate == 's')
+        sigmoid(output, ir, kc);
+    else if (gate == 'r')
+        relu(output, ir, kc);
+    else
+        softmax(output, ir, kc);
+}
+
+int argmax(float *output, int len)
+{
+    int max_ind = 0;
+    float max = output[max_ind];
+
+    for (int i = 1; i < len; i++)
+    {
+        if (output[i] > max)
+        {
+            max = output[i];
+            max_ind = i;
+        }
+    }
+    return max_ind;
 }
 
 void led_blink()
 {
     DDRB |= (1 << PB5);
-    if (index == 0)
+    while (1)
     {
-        while (1)
-        {
-            // Turn on the LED
-            PORTB |= (1 << PB5);
+        // Turn on the LED
+        PORTB |= (1 << PB5);
 
-            // Delay for 1 second
-            _delay_ms(1000);
+        // Delay for 1 second
+        _delay_ms(1000);
 
-            // Turn off the LED
-            PORTB &= ~(1 << PB5);
+        // Turn off the LED
+        PORTB &= ~(1 << PB5);
 
-            // Delay for 1 second
-            _delay_ms(1000);
-        }
+        // Delay for 1 second
+        _delay_ms(1000);
     }
 }
 
@@ -226,17 +296,18 @@ void send_float(float x)
 int main(void)
 {
     initECGModule();
-    float layer2in[SAMPLE_IN_LEN0 * LAYER0_KERNEL_DIM1]{0.0};
-    float output[SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1]{0.0};
+    float res[149 + 15 - 1]{0.0};
+    float layer2in[10]{0.0};
+    float output[4]{0.0};
 
-    int k = detect_qrs();
-    dense(layer2in, &res[k - 30], LAYER0_KERNEL, LAYER0_BIAS, SAMPLE_IN_LEN0, SAMPLE_IN_LEN1, LAYER0_KERNEL_DIM0, LAYER0_KERNEL_DIM1);
-    dense(output, layer2in, LAYER1_KERNEL, LAYER1_BIAS, SAMPLE_IN_LEN0, LAYER0_KERNEL_DIM1, LAYER1_KERNEL_DIM0, LAYER1_KERNEL_DIM1);
-    index = argmax(output, SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1);
+    int i = detect_qrs(SAMPLE_INPUT_F, res);
+    dense(layer2in, &res[60], LAYER0_KERNEL, LAYER0_BIAS, 1, 61, 61, 10, 's');
+    dense(output, layer2in, LAYER1_KERNEL, LAYER1_BIAS, 1, 10, 10, 4, 't');
+    int index = argmax(output, 4);
 
     uart_init();
-    send_float((float)k);
-    for (uint8_t i = 0; i < SAMPLE_IN_LEN0 * LAYER1_KERNEL_DIM1; i++)
+    send_float((float)i);
+    for (uint8_t i = 0; i < 4; i++)
     {
         send_float(output[i]);
     }
