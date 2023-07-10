@@ -300,7 +300,7 @@ int main(void)
     float layer2in[10]{0.0};
     float output[4]{0.0};
 
-    int i = detect_qrs(SAMPLE_INPUT_F, res);
+    int i = detect_qrs(SAMPLE_INPUT_N, res);
     dense(layer2in, &res[60], LAYER0_KERNEL, LAYER0_BIAS, 1, 61, 61, 10, 's');
     dense(output, layer2in, LAYER1_KERNEL, LAYER1_BIAS, 1, 10, 10, 4, 't');
     int index = argmax(output, 4);
