@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "~/Softwares/avr8-gnu-toolchain-linux_x86_64/avr/include/**"
+            ],
+            "defines": []
+        },
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "D:\\avr-gnu-toolchain\\avr\\include"
+            ],
+            "defines": [],
+            "compilerPath": "D:\\avr-gnu-toolchain\\bin\\avr-g++"
+        }
+    ],
+    "version": 4
+}
