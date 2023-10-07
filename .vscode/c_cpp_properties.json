@@ -4,10 +4,9 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/lib/avr/include/**"
+                "~/Softwares/avr8-gnu-toolchain-linux_x86_64/avr/include/**"
             ],
-            "defines": [],
-            "compilerPath": "/usr/bin/avr-g++"
+            "defines": []
         },
         {
             "name": "Windows",

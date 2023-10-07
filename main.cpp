@@ -3,9 +3,48 @@
 #include <util/delay.h>
 #include <stdlib.h>
 #include "model.h"
+#include <time.h>
+#include <util/atomic.h>
+#include <avr/interrupt.h>
 #define BAUD_RATE 9600
 #define F_CPU 16000000UL
 #define UBRR_VALUE ((F_CPU / (16UL * BAUD_RATE)) - 1)
+volatile unsigned long timer1_millis;
+ISR(TIMER1_COMPA_vect)
+{
+    timer1_millis++;
+}
+
+void init_millis(unsigned long f_cpu)
+{
+    unsigned long ctc_match_overflow;
+
+    ctc_match_overflow = ((f_cpu / 1000) / 8); // when timer1 is this value, 1ms has passed
+
+    // (Set timer to clear when matching ctc_match_overflow) | (Set clock divisor to 8)
+    TCCR1B |= (1 << WGM12) | (1 << CS11);
+
+    // high byte first, then low byte
+    OCR1AH = (ctc_match_overflow >> 8);
+    OCR1AL = ctc_match_overflow;
+
+    // Enable the compare match interrupt
+    TIMSK1 |= (1 << OCIE1A);
+
+    // REMEMBER TO ENABLE GLOBAL INTERRUPTS AFTER THIS WITH sei(); !!!
+}
+
+unsigned long millis(void)
+{
+    unsigned long millis_return;
+
+    // Ensure this cannot be disrupted
+    ATOMIC_BLOCK(ATOMIC_FORCEON)
+    {
+        millis_return = timer1_millis;
+    }
+    return millis_return;
+}
 
 void uart_init()
 {
@@ -283,8 +322,9 @@ void led_blink()
 
 void send_float(float x)
 {
-    char myString[12];
-    dtostrf(x, 11, 8, myString);
+    int len = sizeof(float) * 8 + 3;
+    char myString[len];
+    dtostrf(x, -(len - 3), 3, myString);
 
     int i = 0;
     while (myString[i] != '\0')
@@ -292,23 +332,49 @@ void send_float(float x)
         uart_transmit(myString[i++]);
         _delay_us(834);
     }
+    uart_transmit('\r');
+    _delay_us(834);
+    uart_transmit('\n');
+    _delay_us(834);
+}
+
+void send_unsigned_long(unsigned long x)
+{
+    char myString[sizeof(long) * 8 + 1];
+    ultoa(x, myString, 10);
+
+    int i = 0;
+    while (myString[i] != '\0')
+    {
+        uart_transmit(myString[i++]);
+        _delay_us(834);
+    }
+    uart_transmit('\r');
+    _delay_us(834);
+    uart_transmit('\n');
+    _delay_us(834);
 }
 int main(void)
 {
     initECGModule();
+    uart_init();
+    init_millis(F_CPU);
+    sei();
+
     float res[149 + 15 - 1]{0.0};
     float layer2in[10]{0.0};
     float output[4]{0.0};
 
-    int i = detect_qrs(SAMPLE_INPUT_N, res);
+    // int i = detect_qrs(SAMPLE_INPUT_N, res);
+    send_unsigned_long(millis());
     dense(layer2in, &res[60], LAYER0_KERNEL, LAYER0_BIAS, 1, 61, 61, 10, 's');
     dense(output, layer2in, LAYER1_KERNEL, LAYER1_BIAS, 1, 10, 10, 4, 't');
     int index = argmax(output, 4);
+    send_unsigned_long(millis());
 
-    uart_init();
-    send_float((float)i);
     for (uint8_t i = 0; i < 4; i++)
     {
         send_float(output[i]);
     }
+    return 0;
 }

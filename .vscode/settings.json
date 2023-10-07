@@ -6,6 +6,8 @@
         "array": "cpp",
         "string": "cpp",
         "string_view": "cpp",
-        "cstdlib": "cpp"
-    }
+        "cstdlib": "cpp",
+        "atomic.h": "c"
+    },
+    "C_Cpp.default.compilerPath": "/home/zishan/Softwares/avr8-gnu-toolchain-linux_x86_64/bin/avr-g++"
 }
