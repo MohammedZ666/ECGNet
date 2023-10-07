@@ -102,7 +102,7 @@ uint16_t analogRead()
     uint16_t analogValue = ADC;
     return analogValue;
 }
-int detect_qrs(float *x, float *res)
+int detect_qrs(float *res)
 {
     int len = 150;
     float y[len]{0.0};
@@ -120,12 +120,19 @@ int detect_qrs(float *x, float *res)
 
     for (int i = 0; i < len; ++i)
     {
-        y[i] = (b0 * x[i] + b1 * x_1 + b2 * x_2 - (a1 * y_1 + a2 * y_2)) / a0;
+        if (checkECGUnavailable())
+        {
+        }
+        else
+        {
+            float x_i = (analogRead() / 511.5) - 1;
+            y[i] = (b0 * x_i + b1 * x_1 + b2 * x_2 - (a1 * y_1 + a2 * y_2)) / a0;
 
-        x_2 = x_1;
-        x_1 = x[i];
-        y_2 = y_1;
-        y_1 = y[i];
+            x_2 = x_1;
+            x_1 = x_i;
+            y_2 = y_1;
+            y_1 = y[i];
+        }
     }
 
     for (int i = 0; i < 5; i++)
@@ -338,9 +345,9 @@ void send_float(float x)
     _delay_us(834);
 }
 
-void send_unsigned_long(unsigned long x)
+int send_unsigned_long(unsigned long x)
 {
-    char myString[sizeof(long) * 8 + 1];
+    char myString[sizeof(unsigned long) * 8 + 1];
     ultoa(x, myString, 10);
 
     int i = 0;
@@ -353,6 +360,8 @@ void send_unsigned_long(unsigned long x)
     _delay_us(834);
     uart_transmit('\n');
     _delay_us(834);
+
+    return (int)ceil(((i + 2) * 834.0 / 1000));
 }
 int main(void)
 {
@@ -365,12 +374,15 @@ int main(void)
     float layer2in[10]{0.0};
     float output[4]{0.0};
 
-    // int i = detect_qrs(SAMPLE_INPUT_N, res);
-    send_unsigned_long(millis());
-    dense(layer2in, &res[60], LAYER0_KERNEL, LAYER0_BIAS, 1, 61, 61, 10, 's');
+    int i = detect_qrs(res);
+    send_unsigned_long((int)millis());
+
+    int time = (int)millis();
+    dense(layer2in, &res[i], LAYER0_KERNEL, LAYER0_BIAS, 1, 61, 61, 10, 's');
     dense(output, layer2in, LAYER1_KERNEL, LAYER1_BIAS, 1, 10, 10, 4, 't');
+
     int index = argmax(output, 4);
-    send_unsigned_long(millis());
+    send_unsigned_long(((int)millis()) - time);
 
     for (uint8_t i = 0; i < 4; i++)
     {
