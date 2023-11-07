@@ -3,7 +3,7 @@
 This project contains the microcontroller code for the paper "Dense Neural Network Based Arrhythmia Classification on Low-cost and Low-compute Micro-controller". 
 
 - Authors - Md Abu Obaida Zishan, H M Shihab, Sabik Sadman Islam, Maliha Alam Riya, and Jannatun Noor.
-- Supervisor - Janntun Noor
+- Supervisor - Jannatun Noor
 - Journal - Expert Systems with Applications
 - Lab - [Computing for Sustainability and Social Good, BRAC University, Dhaka, Bangladesh](https://www.researchgate.net/lab/Computing-for-Sustainability-and-Social-Good-C2SG-Lab-Jannatun-Noor)
 
