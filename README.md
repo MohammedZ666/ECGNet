@@ -1,13 +1,16 @@
 # ECGNet
 
-This project contains the microcontroller code for the paper "Dense Neural Network Based Arrhythmia Classification on Low-cost and Low-compute Micro-controller". 
+This project contains the microcontroller code for the paper _Dense Neural Network Based Arrhythmia Classification on Low-cost and Low-compute Micro-controller_ where we deployed a neural network to detect arrhythmia. Here, [`main.cpp`](https://github.com/MohammedZ666/ECGNet/blob/main/main.cpp) contains the MCU code for detecting arrhythmia in real-time. [`model.h`](https://github.com/MohammedZ666/ECGNet/blob/main/model.h) contains, the qunatized neural network weights. Finally, [`training.ipynb`](https://github.com/MohammedZ666/ECGNet/blob/main/training.ipynb) contains the training code. 
 
+## Publication
+
+
+- Title - Dense Neural Network Based Arrhythmia Classification on Low-cost and Low-compute Micro-controller
 - Authors - Md Abu Obaida Zishan, H M Shihab, Sabik Sadman Islam, Maliha Alam Riya, and Jannatun Noor.
 - Supervisor - Jannatun Noor
 - Journal - Expert Systems with Applications
 - Lab - [Computing for Sustainability and Social Good, BRAC University, Dhaka, Bangladesh](https://www.researchgate.net/lab/Computing-for-Sustainability-and-Social-Good-C2SG-Lab-Jannatun-Noor)
 
-Here, we deployed a neural network to detect arrhythmia. Here, [`main.cpp`](https://github.com/MohammedZ666/ECGNet/blob/main/main.cpp) contains the MCU code for detecting arrhythmia in real-time. [`model.h`](https://github.com/MohammedZ666/ECGNet/blob/main/model.h) contains, the qunatized neural network weights. Finally, [`training.ipynb`](https://github.com/MohammedZ666/ECGNet/blob/main/training.ipynb) contains the training code. 
 
 
 ## Installation steps
