@@ -13,7 +13,7 @@ This project contains the microcontroller code for the paper _Dense Neural Netwo
 
 
 
-## Installation steps
+## Installation
 
 1) Download and extract avr-gnu toolchain for Linux/Windows from [here](https://www.microchip.com/en-us/tools-resources/develop/microchip-studio/gcc-compilers).
 2) Add the `/bin` directory after extraction to PATH.
