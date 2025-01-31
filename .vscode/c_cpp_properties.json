@@ -12,10 +12,10 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/**",
-                "D:\\avr-gnu-toolchain\\avr\\include"
+                "C:\\Dev\\avr8-gnu-toolchain-win32_x86_64\\avr\\include"
             ],
             "defines": [],
-            "compilerPath": "D:\\avr-gnu-toolchain\\bin\\avr-g++"
+            "compilerPath": "C:\\Dev\\avr8-gnu-toolchain-win32_x86_64\\avr-g++"
         }
     ],
     "version": 4
