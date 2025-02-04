@@ -7,13 +7,37 @@
 #define B1 0
 #define B2 -0.11216024
 #define LEN 150
-#define SPACING 30
-#define LIMIT 0.35
-#define REFRACTORY_PERIOD 120
-#define NOISE_FILT 0.125
-#define QRS_NOISE_DIFF_WEIGHT 0.25
-#define QRS_FILT 0.125
+#define SPACING 70
 
+int get_peak(float *res)
+{
+    int i = SPACING;
+    int j = 1;
+    int max_ind = 0;
+
+    while (i < LEN - SPACING)
+    {
+        if (!(res[i] > res[i - j] && res[i] > res[i + j]))
+        {
+            i = i + j;
+            j = 1;
+            continue;
+        }
+
+        else if (j == SPACING)
+        {
+            max_ind = res[i] > res[max_ind] ? i : max_ind;
+            i = i + SPACING;
+        }
+        else
+        {
+            max_ind = i;
+        }
+
+        j++;
+    }
+    return max_ind;
+}
 int pt_algo(float *res, float *y)
 {
     float x_2 = 0.0; // delayed x, y samples
@@ -42,70 +66,14 @@ int pt_algo(float *res, float *y)
     }
 
     int integration_window{15};
-    // int n = (LEN - 1) + integration_window - 1;
+    // int n = LEN + integration_window - 1;
     int n = LEN; // LEN-1 due to 1st order difference
-    int max_len = LEN > integration_window ? LEN : integration_window;
     for (int i = 0; i < n; i++)
     {
-
-        int kMax = i < max_len ? i : max_len;
-        for (int k = 0; k <= kMax; k++)
-        {
-            if (k < LEN && (i - k) < integration_window)
-            {
-                res[i] += y[k];
-            }
-        }
+        int k = i < integration_window ? 0 : (i - integration_window) + 1;
+        for (; k <= i; k++)
+            res[i] += y[k];
     }
-
-    float qrs_peak_est{0.0};
-    float noise_peak_est{0.0};
-    float noise_peak_val{0.0};
-    int last_qrs_index{-1};
-    float threshold{0.0};
-
-    uint8_t i = 60;
-    uint8_t j = 1;
-    uint8_t max_ind = i;
-    bool is_peak = false;
-
-    while (j <= SPACING && i < LEN - 30)
-    {
-        if (!(res[i] > res[i - j] && res[i] > res[i + j]))
-        {
-            i = i + j;
-            j = 1;
-            continue;
-        }
-
-        else if (j == SPACING)
-        {
-            is_peak = true;
-            max_ind = res[i] > res[max_ind] ? i : max_ind;
-            i += SPACING + 1;
-        }
-        j++;
-    }
-
-    if (!is_peak)
-        return -1;
-
-    i = max_ind;
-    if (last_qrs_index == -1 || i - last_qrs_index > REFRACTORY_PERIOD)
-    {
-        float current_peak_val = res[i];
-        if (current_peak_val > threshold)
-        {
-            qrs_peak_est = QRS_FILT * current_peak_val + (1 - QRS_FILT) * qrs_peak_est;
-            last_qrs_index = i;
-            return i;
-        }
-        else
-        {
-            noise_peak_est = NOISE_FILT * current_peak_val + (1 - NOISE_FILT) * noise_peak_est;
-        }
-        threshold = noise_peak_est + QRS_NOISE_DIFF_WEIGHT * (qrs_peak_est - noise_peak_est);
-    }
-    return -1;
+    return get_peak(&res[0]);
 }
 #endif

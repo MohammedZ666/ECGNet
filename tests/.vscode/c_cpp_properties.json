@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "Windows",
+            "includePath": [
+                "${workspaceFolder}/**",
+                ""
+            ],
+            "defines": [],
+            "compilerPath": "C:\\msys64\\ucrt64\\bin"
+        }
+    ],
+    "version": 4
+}
