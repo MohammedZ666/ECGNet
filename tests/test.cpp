@@ -75,8 +75,15 @@ int main()
 
         row_index++;
     }
-    cout << "Total Max Index Failures " << max_index_fail_count << " out of " << row_index << "\n";
-    cout << "That is " << (1.0 * max_index_fail_count / row_index) << "\% of the MIT-BIH dataset" << "\n";
+    if (max_index_fail_count > 0)
+    {
+        cout << "Total Max Index Failures " << max_index_fail_count << " out of " << row_index << "\n";
+        cout << "That is " << (1.0 * max_index_fail_count / row_index) << "\% of the MIT-BIH dataset" << "\n";
+    }
+    else
+    {
+        cout << "Pan-Tomkins Test Passed!\n";
+    }
     file.close();
     return 0;
 }
