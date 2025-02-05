@@ -8,7 +8,7 @@ int main(void)
     init_millis(F_CPU);
     sei();
 
-    float res[150]{0.0};
+    float res[LEN]{0.0};
     int i = detect_qrs(res);
     send_unsigned_long((int)millis());
     int time = (int)millis();
