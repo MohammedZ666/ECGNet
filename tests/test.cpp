@@ -108,7 +108,7 @@ int main()
         row_index++;
     }
 
-    printf("Inference success %lf\%\n", (row_index - inference_fail_count) * 100.0 / row_index); // row_index becomes length after the loop ends
+    printf("Inference success rate -> %lf\%\n", (row_index - inference_fail_count) * 100.0 / row_index); // row_index becomes length after the loop ends
 
     file.close();
     return 0;
