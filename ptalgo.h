@@ -7,34 +7,36 @@
 #define B1 0
 #define B2 -0.11216024
 #define LEN 150
-#define SPACING 70
+#define SPACING 50
 
 int get_peak(float *res)
 {
     int i = SPACING;
     int j = 1;
-    int max_ind = 0;
+    float max = -1.0;
+    int max_ind = -1;
 
     while (i < LEN - SPACING)
     {
-        if (!(res[i] > res[i - j] && res[i] > res[i + j]))
+        if ((res[i] > res[i - j] && res[i] > res[i + j]))
         {
-            i = i + j;
-            j = 1;
-            continue;
-        }
+            if (res[i] > max)
+            {
+                max_ind = i;
+                max = res[i];
+            }
 
-        else if (j == SPACING)
-        {
-            max_ind = res[i] > res[max_ind] ? i : max_ind;
-            i = i + SPACING;
+            if (j == SPACING)
+            {
+                i += SPACING;
+                j = 1;
+            }
+
+            else
+                j++;
         }
         else
-        {
-            max_ind = i;
-        }
-
-        j++;
+            i++;
     }
     return max_ind;
 }

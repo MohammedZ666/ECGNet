@@ -173,7 +173,7 @@ int detect_qrs(float *res)
     pt_algo(&res[0], &y[0]);
 }
 
-int make_inference(float *res, int i)
+void make_inference(float *res, int i)
 {
 
     float layer2in[10]{0.0};
