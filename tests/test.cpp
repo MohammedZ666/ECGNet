@@ -84,7 +84,7 @@ int main()
         {
             if (abs(preprocessed[i] - res[i]) > TOLERANCE)
             {
-                throw runtime_error("Value mismatch for tolerance " + to_string(TOLERANCE) + " and row_index " + to_string(row_index) + " !");
+                throw runtime_error("Value mismatch for tolerance " + to_string(TOLERANCE) + " and row_index " + to_string(row_index) + "!");
             }
         }
 
@@ -92,16 +92,16 @@ int main()
         int res_peak_index = get_peak(res);
 
         if (preprocessed_peak_index != res_peak_index)
-            throw runtime_error("Peak mismatch for " + to_string(row_index) + " !");
+            throw runtime_error("Peak mismatch for " + to_string(row_index) + "!");
 
         if (preprocessed_peak_index == -1 || res_peak_index == -1)
-            throw runtime_error("Negative peak for " + to_string(row_index) + " !");
+            throw runtime_error("Negative peak for " + to_string(row_index) + "!");
 
         char preprocessed_label = arrhythmia[make_inference(preprocessed, preprocessed_peak_index)];
         char res_label = arrhythmia[make_inference(res, res_peak_index)];
 
         if (preprocessed_label != res_label)
-            throw runtime_error("Inference mismatch! Preprocessed label -> " + to_string(preprocessed_label) + " and res_label -> " + to_string(res_label) + " !");
+            throw runtime_error("Inference mismatch! Preprocessed label -> " + to_string(preprocessed_label) + " and res_label -> " + to_string(res_label) + "!");
 
         if (preprocessed_label != label)
             inference_fail_count++;
