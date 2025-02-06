@@ -6,7 +6,7 @@
 #include <string>
 #include <stdint.h>
 #define TOLERANCE 1e-6
-
+#define REAL_TIME_INFERENCE 0
 using namespace std;
 
 vector<string> split(const string &s, char delimiter)
@@ -24,10 +24,11 @@ int make_inference(float *res, int i)
 {
     float layer2in[10]{0.0};
     float output[4]{0.0};
-    // return neural_net(&res[0], 60, &layer2in[0], &output[0]);
-
-    int index = (int)i * 3 / 4;
-    // printf("real %d mod %d\n", i, index);
+    if (REAL_TIME_INFERENCE)
+    {
+        int index = (int)i * 3 / 4;
+        return neural_net(&res[0], index, &layer2in[0], &output[0]);
+    }
     return neural_net(&res[0], 60, &layer2in[0], &output[0]);
 }
 
@@ -92,16 +93,16 @@ int main()
         int res_peak_index = get_peak(res);
 
         if (preprocessed_peak_index != res_peak_index)
-            throw runtime_error("Peak mismatch for " + to_string(row_index) + "!");
+            throw runtime_error("Peak mismatch for row_index " + to_string(row_index) + "!");
 
         if (preprocessed_peak_index == -1 || res_peak_index == -1)
-            throw runtime_error("Negative peak for " + to_string(row_index) + "!");
+            throw runtime_error("Negative peak for row_index " + to_string(row_index) + "!");
 
         char preprocessed_label = arrhythmia[make_inference(preprocessed, preprocessed_peak_index)];
         char res_label = arrhythmia[make_inference(res, res_peak_index)];
 
         if (preprocessed_label != res_label)
-            throw runtime_error("Inference mismatch! Preprocessed label -> " + to_string(preprocessed_label) + " and res_label -> " + to_string(res_label) + "!");
+            throw runtime_error("Inference mismatch! Preprocessed label -> " + string(1, preprocessed_label) + ", where res_label -> " + string(1, res_label) + " for row_index " + to_string(row_index) + ".");
 
         if (preprocessed_label != label)
             inference_fail_count++;
