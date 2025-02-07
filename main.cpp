@@ -1,5 +1,5 @@
 #include "utils.h"
-#include "ptalgo.h"
+#include "sampledata.h"
 
 int main(void)
 {
@@ -8,11 +8,18 @@ int main(void)
     init_millis(F_CPU);
     sei();
 
-    float res[LEN]{0.0};
-    int i = detect_qrs(res);
-    send_unsigned_long((int)millis());
+    float *ecg_input = SAMPLE_INPUT_F;
     int time = (int)millis();
-    make_inference(&res[i], i);
+    unsigned long peak = pt_algo(ecg_input);
+    send_unsigned_long(((int)millis() - time));
+    send_unsigned_long(peak);
+    send_unsigned_long(PEAK_F);
+    time = (int)millis();
+    int i = make_inference(ecg_input, 60);
     send_unsigned_long(((int)millis()) - time);
+    char arrhythmia[] = {'N', 'S', 'V', 'F', '\0'};
+    send_char(arrhythmia[i]);
+    send_char('\n');
+
     return 0;
 }

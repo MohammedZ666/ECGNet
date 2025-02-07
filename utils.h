@@ -125,6 +125,12 @@ void led_blink()
     }
 }
 
+void send_char(char data)
+{
+    uart_transmit(data);
+    _delay_us(834);
+}
+
 void send_float(float x)
 {
     int len = sizeof(float) * 8 + 3;
@@ -161,29 +167,27 @@ int send_unsigned_long(unsigned long x)
 
     return (int)ceil(((i + 2) * 834.0 / 1000));
 }
-int detect_qrs(float *res)
+int detect_qrs(float *ecg_input)
 {
-    float y[LEN]{0.0};
     for (int i = 0; i < LEN; i++)
     {
         while (checkECGUnavailable())
             ;
-        y[i] = (analogRead() / 511.5) - 1;
+        ecg_input[i] = (analogRead() / 511.5) - 1;
     }
-    pt_algo(&res[0], &y[0]);
+    return pt_algo(&ecg_input[0]);
 }
 
-void make_inference(float *res, int i)
+int make_inference(float *ecg_input, int i)
 {
-
     float layer2in[10]{0.0};
     float output[4]{0.0};
-    int index = neural_net(&res[0], i, &layer2in[0], &output[0]);
-
+    int label_index = neural_net(&ecg_input[0], i, &layer2in[0], &output[0]);
     for (uint8_t i = 0; i < 4; i++)
     {
         send_float(output[i]);
     }
+    return label_index;
 }
 
 #endif

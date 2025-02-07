@@ -4,10 +4,10 @@
             "name": "Windows",
             "includePath": [
                 "${workspaceFolder}/**",
-                ""
+                "C:\\msys64\\ucrt64\\include\\c++\\14.2.0"
             ],
             "defines": [],
-            "compilerPath": "C:\\msys64\\ucrt64\\bin"
+            "compilerPath": "C:\\msys64\\ucrt64\\bin\\g++"
         }
     ],
     "version": 4

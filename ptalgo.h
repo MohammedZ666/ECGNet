@@ -9,7 +9,7 @@
 #define LEN 150
 #define SPACING 50
 
-int get_peak(float *res)
+int get_peak(float *ecg_input)
 {
     int i = SPACING;
     int j = 1;
@@ -18,12 +18,12 @@ int get_peak(float *res)
 
     while (i < LEN - SPACING)
     {
-        if ((res[i] > res[i - j] && res[i] > res[i + j]))
+        if ((ecg_input[i] > ecg_input[i - j] && ecg_input[i] > ecg_input[i + j]))
         {
-            if (res[i] > max)
+            if (ecg_input[i] > max)
             {
                 max_ind = i;
-                max = res[i];
+                max = ecg_input[i];
             }
 
             if (j == SPACING)
@@ -40,8 +40,15 @@ int get_peak(float *res)
     }
     return max_ind;
 }
-int pt_algo(float *res, float *y)
+int pt_algo(float *ecg_input)
 {
+    float y[LEN] = {0.0};
+    for (int i = 0; i < LEN; i++)
+    {
+        y[i] = ecg_input[i];
+        ecg_input[i] = 0;
+    }
+
     float x_2 = 0.0; // delayed x, y samples
     float x_1 = 0.0;
     float y_1 = 0.0;
@@ -74,8 +81,8 @@ int pt_algo(float *res, float *y)
     {
         int k = i < integration_window ? 0 : (i - integration_window) + 1;
         for (; k <= i; k++)
-            res[i] += y[k];
+            ecg_input[i] += y[k];
     }
-    return get_peak(&res[0]);
+    return get_peak(ecg_input);
 }
 #endif

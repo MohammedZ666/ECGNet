@@ -15,7 +15,7 @@
                 "C:\\Dev\\avr8-gnu-toolchain-win32_x86_64\\avr\\include"
             ],
             "defines": [],
-            "compilerPath": "C:\\Dev\\avr8-gnu-toolchain-win32_x86_64\\avr-g++"
+            "compilerPath": "C:\\msys64\\ucrt64\\bin\\g++.exe"
         }
     ],
     "version": 4
